@@ -1,18 +1,24 @@
-project (
-    'evaluator', 'cpp',
-    default_options : ['warning_level=3', 'cpp_std=c++17']
+project(
+    'math_expr',
+    'cpp',
+    version         : '1.0.0',
+    default_options : [
+        'cpp_std=c++17',
+        'warning_level=3',
+        'buildtype=debugoptimized',
+    ],
 )
 
-includes = [
-    'src/include'
-]
-
-sources = [
-    'src/main.cpp'
-]
+sources = files(
+    'src/lexer.cpp',
+    'src/parser.cpp',
+    'src/evaluator.cpp',
+    'src/main.cpp',
+)
 
 executable(
-    'main',
+    'math_expr',
     sources,
-    include_directories : includes
+    include_directories : include_directories('src'),
+    install             : true,
 )
