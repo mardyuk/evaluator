@@ -6,6 +6,7 @@
 struct NumberNode;
 struct BinaryOpNode;
 struct UnaryOpNode;
+struct VariableNode;
 
 class ASTVisitor {
 public:
@@ -16,6 +17,8 @@ public:
     virtual double visit(const BinaryOpNode &node) = 0;
 
     virtual double visit(const UnaryOpNode &node) = 0;
+
+    virtual double visit(const VariableNode &node) = 0;
 };
 
 struct ASTNode {
@@ -54,6 +57,14 @@ struct UnaryOpNode : ASTNode {
     UnaryOpNode(TokenType op, ASTNodePtr operand)
         : op(op), operand(std::move(operand)) {
     }
+
+    double accept(ASTVisitor &v) const override { return v.visit(*this); }
+};
+
+struct VariableNode : ASTNode {
+    std::string name;
+
+    explicit VariableNode(std::string name) : name(std::move(name)) {}
 
     double accept(ASTVisitor &v) const override { return v.visit(*this); }
 };

@@ -29,4 +29,5 @@ private:
     void skipWhitespace();
 
     Token readNumber();
+    Token readIdentifier();
 };

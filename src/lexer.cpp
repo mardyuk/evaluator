@@ -18,6 +18,11 @@ std::vector<Token> Lexer::tokenize() {
             continue;
         }
 
+        if (std::isalpha(c) || c == '_') {
+            tokens.push_back(readIdentifier());
+            continue;
+        }
+
         switch (c) {
             case '+': tokens.emplace_back(TokenType::PLUS, "+");
                 advance();
@@ -48,6 +53,14 @@ std::vector<Token> Lexer::tokenize() {
 
 void Lexer::skipWhitespace() {
     while (!isAtEnd() && std::isspace(current())) advance();
+}
+
+Token Lexer::readIdentifier() {
+    size_t start = m_pos;
+    while (!isAtEnd() && (std::isalnum(current()) || current() == '_'))
+        advance();
+    std::string lexeme = m_source.substr(start, m_pos - start);
+    return Token(TokenType::IDENTIFIER, lexeme);
 }
 
 Token Lexer::readNumber() {

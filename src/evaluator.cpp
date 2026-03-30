@@ -31,3 +31,14 @@ double Evaluator::visit(const UnaryOpNode &node) {
         default: throw EvaluationError("unknown unary operator");
     }
 }
+
+void Evaluator::setVariable(const std::string &name, double value) {
+    m_variables[name] = value;
+}
+
+double Evaluator::visit(const VariableNode &node) {
+    auto it = m_variables.find(node.name);
+    if (it == m_variables.end())
+        throw EvaluationError("undefined variable '" + node.name + "'");
+    return it->second;
+}

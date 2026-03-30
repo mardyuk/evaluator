@@ -66,6 +66,9 @@ ASTNodePtr Parser::parsePrimary() {
     if (match({TokenType::NUMBER}))
         return std::make_unique<NumberNode>(previous().value);
 
+    if (match({TokenType::IDENTIFIER}))
+        return std::make_unique<VariableNode>(previous().lexeme);
+
     if (match({TokenType::LPAREN})) {
         ASTNodePtr inner = parseExpression();
         expect(TokenType::RPAREN, "expected ')' after expression");
