@@ -1,59 +1,44 @@
 #include "lexer.hpp"
+#include "tokenizer.hpp"
 #include "parser.hpp"
-#include "evaluator.hpp"
+#include "compiler.hpp"
+#include "vm.hpp"
+#include "scope.hpp"
 #include <iostream>
-#include <iomanip>
+#include <fstream>
+#include <sstream>
 #include <string>
-#include <regex>
+#include <stdexcept>
 
-// Returns true if the line is an assignment like "x = <expr>", sets the variable.
-static bool tryAssign(const std::string &input, Evaluator &evaluator) {
-    static const std::regex assignRe(R"(^\s*([A-Za-z_][A-Za-z0-9_]*)\s*=\s*(.+)$)");
-    std::smatch m;
-    if (!std::regex_match(input, m, assignRe)) return false;
-
-    const std::string name = m[1];
-    const std::string rhs  = m[2];
-
-    Lexer lexer(rhs);
-    auto tokens = lexer.tokenize();
-    Parser parser(std::move(tokens));
-    auto root = parser.parse();
-    double value = evaluator.evaluate(*root);
-    evaluator.setVariable(name, value);
-
-    std::cout << name << " = " << std::setprecision(10) << value << "\n";
-    return true;
+static std::string readFile(const std::string& path) {
+    std::ifstream f(path);
+    if (!f) throw std::runtime_error("cannot open: " + path);
+    std::ostringstream ss;
+    ss << f.rdbuf();
+    return ss.str();
 }
 
-int main() {
-    std::cout << "Math Expression Evaluator\n";
-    std::cout << "Operators : + - * / ( )\n";
-    std::cout << "Variables : assign with  x = 3.14  then use in expressions\n";
-    std::cout << "Type 'quit' or 'exit' to exit.\n";
-
-    Evaluator evaluator;
-    std::string line;
-
-    while (true) {
-        std::cout << "> ";
-        if (!std::getline(std::cin, line)) break;
-        if (line.empty()) continue;
-        if (line == "quit" || line == "exit") break;
-
-        try {
-            if (tryAssign(line, evaluator)) continue;
-
-            Lexer lexer(line);
-            auto tokens = lexer.tokenize();
-            Parser parser(std::move(tokens));
-            auto root = parser.parse();
-            double result = evaluator.evaluate(*root);
-            std::cout << "= " << std::setprecision(10) << result << "\n";
-        } catch (const std::exception &e) {
-            std::cerr << "Error: " << e.what() << "\n";
-        }
+int main(int argc, char* argv[]) {
+    if (argc < 2) {
+        std::cerr << "usage: nogo <file.nogo>\n";
+        return 1;
     }
-
-    return 0;
+    try {
+        std::string src = readFile(argv[1]);
+        std::istringstream ss(src);
+        Lexer     lx(ss);
+        Tokenizer tok(lx);
+        SymbolTable sym;
+        Parser    par(tok, sym);
+        auto root = par.parseProgram();
+        Compiler  cmp(sym);
+        ByteCode  bc = cmp.compile(root);
+        VM vm;
+        vm.load(bc);
+        vm.run();
+        return 0;
+    } catch (const std::exception& e) {
+        std::cerr << "error: " << e.what() << "\n";
+        return 1;
+    }
 }

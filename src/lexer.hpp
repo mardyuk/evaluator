@@ -1,33 +1,23 @@
 #pragma once
-#include "token.hpp"
-#include <string>
-#include <vector>
-#include <stdexcept>
+#include <istream>
 
-class LexerError : public std::runtime_error {
-public:
-    explicit LexerError(const std::string &msg, size_t pos)
-        : std::runtime_error("Lexer error at position " +
-                             std::to_string(pos) + ": " + msg) {
-    }
-};
-
+// Character-level stream with line tracking.
 class Lexer {
 public:
-    explicit Lexer(std::string source);
+    explicit Lexer(std::istream& src);
 
-    std::vector<Token> tokenize();
+    void advance();
+    int  peek()     const { return _cur; }
+    int  peekNext() const;   // look at the char after current without consuming
+    bool atEnd()    const { return _cur == EOF; }
+
+    int  curLine()  const { return _line; }
+    void markStart()      { _tokLine = _line; }
+    int  tokLine()  const { return _tokLine; }
 
 private:
-    std::string m_source;
-    size_t m_pos{0};
-
-    bool isAtEnd() const { return m_pos >= m_source.size(); }
-    char current() const { return m_source[m_pos]; }
-    char advance() { return m_source[m_pos++]; }
-
-    void skipWhitespace();
-
-    Token readNumber();
-    Token readIdentifier();
+    std::istream& _src;
+    int _cur     = 0;
+    int _line    = 1;
+    int _tokLine = 1;
 };

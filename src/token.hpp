@@ -1,28 +1,51 @@
 #pragma once
 #include <string>
 
-enum class TokenType {
-    NUMBER,
-    IDENTIFIER,
-    PLUS,
-    MINUS,
-    STAR,
-    SLASH,
-    LPAREN,
-    RPAREN,
-    END
+enum class TokType {
+    Num,        // numeric literal
+    Str,        // string literal
+    Name,       // identifier / built-in function name
+    Op,         // arithmetic / bitwise operator  (+ - * / ** // %/ % & | ^ ~ << >>)
+    Assign,     // =
+    CompAssign, // += -= *= /= %= ^=
+    Compare,    // == != < > <= >=
+    LParen,     // (
+    RParen,     // )
+    LBrace,     // {
+    RBrace,     // }
+    Semi,       // ;
+    Comma,      // ,
+    Question,   // ?
+    Colon,      // :
+    // keywords
+    If,
+    Else,
+    While,
+    For,
+    Fn,         // fn
+    Void,       // void
+    Return,     // return
+    Let,        // let  (variable declaration)
+    Global,     // global
+    Local,      // local
+    Print,      // print
+    Bool,       // true / false
+    None,       // none
+    Break,
+    Continue,
+    Switch,
+    Case,
+    Default,
+    And,        // and
+    Or,         // or
+    Not,        // not
+    MathConst,  // PI, E, INF, MAX
+    Eof,
+    Err,
 };
 
 struct Token {
-    TokenType type;
-    std::string lexeme;
-    double value{};
-
-    Token(TokenType t, std::string lex)
-        : type(t), lexeme(std::move(lex)) {
-    }
-
-    Token(TokenType t, std::string lex, double val)
-        : type(t), lexeme(std::move(lex)), value(val) {
-    }
+    TokType     type;
+    std::string text;
+    int         line = 0;
 };
