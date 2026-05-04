@@ -11,6 +11,9 @@ project(
 
 sources = files(
     'src/lexer.cpp',
+    'src/tokenizer.cpp',
+    'src/ast.cpp',
+    'src/parser.cpp',
     'src/main.cpp',
 )
 
