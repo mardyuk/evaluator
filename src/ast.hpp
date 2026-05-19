@@ -228,8 +228,9 @@ public:
 };
 
 class ForStmt : public StmtNode {
-    std::shared_ptr<StmtNode> _init, _update, _body;
+    std::shared_ptr<StmtNode> _init;
     std::shared_ptr<ASTNode>  _cond;
+    std::shared_ptr<StmtNode> _update, _body;
 public:
     ForStmt(std::shared_ptr<StmtNode> i, std::shared_ptr<ASTNode> c,
             std::shared_ptr<StmtNode> u, std::shared_ptr<StmtNode> b)

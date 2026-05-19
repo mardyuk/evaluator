@@ -248,7 +248,7 @@ std::shared_ptr<StmtNode> Parser::parseFor() {
                     auto a = std::make_shared<AssignStmt>(lOff, rhs2, hops);
                     a->line = ln; update = a;
                 } else {
-                    size_t gAddr; _sym.tryGlobalAddr(name, gAddr);
+                    size_t gAddr = 0; _sym.tryGlobalAddr(name, gAddr);
                     auto a = std::make_shared<AssignStmt>(gAddr, rhs2);
                     a->line = ln; update = a;
                 }
@@ -521,7 +521,7 @@ std::shared_ptr<StmtNode> Parser::parseAssign(const std::string& name,
             auto a = std::make_shared<AssignStmt>(lOff, combined, hops);
             a->line = ln; return a;
         } else {
-            size_t gAddr; _sym.tryGlobalAddr(name, gAddr);
+            size_t gAddr = 0; _sym.tryGlobalAddr(name, gAddr);
             auto a = std::make_shared<AssignStmt>(gAddr, combined);
             a->line = ln; return a;
         }
