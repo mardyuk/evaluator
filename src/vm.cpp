@@ -7,6 +7,8 @@
 #include <stdexcept>
 #include <limits>
 #include <algorithm>
+#include <cstdlib>
+#include <ctime>
 
 static const char* OP_NAMES[] = {
     "ADD","SUB","MUL","DIV","MOD","POW","FDIV","FRACDIV",
@@ -21,7 +23,8 @@ static const char* OP_NAMES[] = {
     "SQRT","CBRT","EXP","LOG","LOG10","LOG2","LOG_AB","MATH_POW",
     "CEIL","FLOOR","ABS","ROUND","FMOD",
     "CONST_PI","CONST_E","CONST_INF","CONST_MAX",
-    "INPUT","LENGTH","TYPE","CHR","ORD","BIN","OCT","HEX","DEC"
+    "INPUT","LENGTH","TYPE","CHR","ORD","BIN","OCT","HEX","DEC",
+    "STR_GET","RANDOM"
 };
 
 void VM::initFromBytecode(const ByteCode& bc) {
@@ -85,6 +88,8 @@ void VM::debugPrompt(size_t pc) {
 }
 
 double VM::run() {
+    static bool seeded = false;
+    if (!seeded) { std::srand((unsigned)std::time(nullptr)); seeded = true; }
     if (_debug) _step = true;
     size_t pc = 0;
 
@@ -400,9 +405,34 @@ double VM::run() {
             // ── Built-in functions ────────────────────────────────────────────
 
             case Op::INPUT: {
-                std::string s;
-                std::getline(std::cin, s);
-                _regs[ins.dst] = Value{std::move(s)};
+                std::string raw;
+                if (!std::getline(std::cin, raw)) {
+                    _regs[ins.dst] = Value{std::monostate{}}; break;
+                }
+                // strip \r for Windows line endings
+                if (!raw.empty() && raw.back() == '\r') raw.pop_back();
+                // trim whitespace
+                size_t s = raw.find_first_not_of(" \t");
+                if (s == std::string::npos) { _regs[ins.dst] = Value{std::monostate{}}; break; }
+                size_t e = raw.find_last_not_of(" \t");
+                std::string trimmed = raw.substr(s, e - s + 1);
+                // quoted string → strip quotes, return as str
+                if (trimmed.size() >= 2) {
+                    char f = trimmed.front(), b = trimmed.back();
+                    if ((f == '"' && b == '"') || (f == '\'' && b == '\'')) {
+                        _regs[ins.dst] = Value{trimmed.substr(1, trimmed.size() - 2)};
+                        break;
+                    }
+                }
+                // try numeric conversion
+                char* end = nullptr;
+                double num = std::strtod(trimmed.c_str(), &end);
+                // skip trailing whitespace after the number
+                while (end && *end == ' ') ++end;
+                if (end && *end == '\0')
+                    _regs[ins.dst] = Value{num};
+                else
+                    _regs[ins.dst] = Value{trimmed};
                 break;
             }
             case Op::LENGTH: {
@@ -470,6 +500,21 @@ double VM::run() {
                 }
                 break;
             }
+            case Op::STR_GET: {
+                const auto& sv = _regs[ins.left];
+                if (!std::holds_alternative<std::string>(sv))
+                    throw std::runtime_error("string index requires a string");
+                const std::string& str = std::get<std::string>(sv);
+                int32_t idx = (int32_t)asNum(_regs[ins.right]);
+                if (idx < 0) idx += (int32_t)str.size();
+                if (idx < 0 || idx >= (int32_t)str.size())
+                    throw std::runtime_error("string index out of range");
+                _regs[ins.dst] = Value{std::string(1, str[(size_t)idx])};
+                break;
+            }
+            case Op::RANDOM:
+                _regs[ins.dst] = Value{(double)std::rand() / ((double)RAND_MAX + 1.0)};
+                break;
 
             default:
                 throw std::runtime_error("unknown opcode " + std::to_string(ins.op));

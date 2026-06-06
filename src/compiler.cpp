@@ -220,6 +220,12 @@ bool Compiler::tryBuiltin(const std::string& name,
     if (name == "oct")    return unary(Op::OCT);
     if (name == "hex")    return unary(Op::HEX);
     if (name == "dec")    return unary(Op::DEC);
+    if (name == "random") {
+        if (!args.empty()) return false;
+        resultReg = allocReg();
+        code.push_back({(uint32_t)Op::RANDOM, (uint32_t)resultReg, 0, 0});
+        return true;
+    }
 
     if (name == "input") {
         if (args.size() > 1) return false;
@@ -292,6 +298,16 @@ std::vector<Instr> Compiler::genExpr(const std::vector<std::shared_ptr<ASTNode>>
             else if (u->op() == "~") uop = Op::BNOT;
             code.push_back({(uint32_t)uop, (uint32_t)dst, (uint32_t)cr, 0});
             freeReg(cr);
+            stk.push(dst);
+
+        } else if (auto ix = std::dynamic_pointer_cast<IndexNode>(node)) {
+            // IndexNode children are visited by postOrder, but we handle it inline
+            // (postOrder skips TernaryNode; IndexNode children ARE in the traversal)
+            int idxR = stk.top(); stk.pop();
+            int strR = stk.top(); stk.pop();
+            int dst = allocReg();
+            code.push_back({(uint32_t)Op::STR_GET, (uint32_t)dst, (uint32_t)strR, (uint32_t)idxR});
+            freeReg(strR); freeReg(idxR);
             stk.push(dst);
 
         } else if (auto ln = std::dynamic_pointer_cast<LenNode>(node)) {

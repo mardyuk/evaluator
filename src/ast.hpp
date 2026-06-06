@@ -39,6 +39,8 @@ enum class Op : uint8_t {
     CONST_PI, CONST_E, CONST_INF, CONST_MAX,
     // Built-in functions
     INPUT, LENGTH, TYPE, CHR, ORD, BIN, OCT, HEX, DEC,
+    // String indexing and random
+    STR_GET, RANDOM,
 };
 
 // ─── Abstract base ───────────────────────────────────────────────────────────
@@ -160,6 +162,21 @@ public:
     const std::vector<std::shared_ptr<ASTNode>>& args() const { return _args; }
     void dump(std::string pfx, bool last) const override;
     std::vector<std::shared_ptr<ASTNode>> children() const override { return {}; }
+};
+
+class IndexNode : public ASTNode {
+    std::shared_ptr<ASTNode> _str, _idx;
+public:
+    IndexNode(std::shared_ptr<ASTNode> s, std::shared_ptr<ASTNode> i)
+        : _str(std::move(s)), _idx(std::move(i)) {}
+    std::shared_ptr<ASTNode> str() const { return _str; }
+    std::shared_ptr<ASTNode> idx() const { return _idx; }
+    void dump(std::string pfx, bool last) const override {
+        std::cout << pfx << (last ? "└── " : "├── ") << "Index[]\n";
+        _str->dump(pfx + (last ? "    " : "│   "), false);
+        _idx->dump(pfx + (last ? "    " : "│   "), true);
+    }
+    std::vector<std::shared_ptr<ASTNode>> children() const override { return {_str, _idx}; }
 };
 
 class LenNode : public ASTNode {

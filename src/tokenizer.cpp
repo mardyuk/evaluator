@@ -37,6 +37,7 @@ static const std::unordered_set<std::string> kBuiltins = {
     "sqrt","cbrt","pow","exp","log","ln","log10","log2","log_ab",
     "ceil","floor","abs","round","fmod",
     "input","length","type","chr","ord","bin","oct","hex","dec",
+    "random",
 };
 
 Tokenizer::Tokenizer(Lexer& lex) : _lex(lex) {}
@@ -46,8 +47,8 @@ void Tokenizer::skip() {
         int c = _lex.peek();
         if (std::isspace(c)) { _lex.advance(); continue; }
 
-        // single-line comment: //
-        if (c == '/' && _lex.peekNext() == '/') {
+        // single-line comment: #
+        if (c == '#') {
             while (!_lex.atEnd() && _lex.peek() != '\n') _lex.advance();
             continue;
         }
@@ -79,8 +80,10 @@ Token Tokenizer::next() {
 
     if (c == '(') { _lex.advance(); return {TokType::LParen,  "(", _lex.tokLine()}; }
     if (c == ')') { _lex.advance(); return {TokType::RParen,  ")", _lex.tokLine()}; }
-    if (c == '{') { _lex.advance(); return {TokType::LBrace,  "{", _lex.tokLine()}; }
-    if (c == '}') { _lex.advance(); return {TokType::RBrace,  "}", _lex.tokLine()}; }
+    if (c == '{') { _lex.advance(); return {TokType::LBrace,   "{", _lex.tokLine()}; }
+    if (c == '}') { _lex.advance(); return {TokType::RBrace,   "}", _lex.tokLine()}; }
+    if (c == '[') { _lex.advance(); return {TokType::LBracket, "[", _lex.tokLine()}; }
+    if (c == ']') { _lex.advance(); return {TokType::RBracket, "]", _lex.tokLine()}; }
     if (c == ';') { _lex.advance(); return {TokType::Semi,    ";", _lex.tokLine()}; }
     if (c == ',') { _lex.advance(); return {TokType::Comma,   ",", _lex.tokLine()}; }
     if (c == '?') { _lex.advance(); return {TokType::Question,"?", _lex.tokLine()}; }

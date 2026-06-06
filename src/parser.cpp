@@ -8,6 +8,7 @@ static const std::unordered_set<std::string> kBuiltinNames = {
     "sqrt","cbrt","pow","exp","log","ln","log10","log2","log_ab",
     "ceil","floor","abs","round","fmod",
     "input","length","type","chr","ord","bin","oct","hex","dec",
+    "random",
 };
 
 Parser::Parser(Tokenizer& tok, SymbolTable& st) : _tok(tok), _sym(st) {
@@ -409,6 +410,8 @@ std::shared_ptr<StmtNode> Parser::parseFnDef() {
     int slots = _sym.frameSlotCount();
     _sym.exitFunction();
 
+    if (check(TokType::Semi)) next(); // optional ';' after fn body
+
     auto s = std::make_shared<FnDefStmt>(name, params, body, slots, isVoid);
     s->line = ln; return s;
 }
@@ -559,6 +562,7 @@ int Parser::prec(const std::string& op) const {
     if (op == "*" || op == "/" ||
         op == "%" || op == "//" || op == "%/")  return 10;
     if (op == "**")                              return 11; // right-assoc
+    if (op == "_" || op == "~" || op == "not") return 12; // unary, highest
     return 0;
 }
 
@@ -640,24 +644,31 @@ std::shared_ptr<ASTNode> Parser::parseExpr() {
 
             } else if (t == TokType::Name) {
                 std::string name = _cur.text; next();
+                std::shared_ptr<ASTNode> atom;
                 if (check(TokType::LParen)) {
-                    vals.push(parseCallOrBuiltin(name));
+                    atom = parseCallOrBuiltin(name);
                 } else {
-                    // variable reference
                     int32_t lOff = 0; int hops = 0;
                     if (_sym.tryResolveLocal(name, lOff, hops)) {
-                        vals.push(std::make_shared<VarNode>(lOff, hops));
+                        atom = std::make_shared<VarNode>(lOff, hops);
                     } else {
                         size_t gAddr = 0;
                         if (_sym.tryGlobalAddr(name, gAddr)) {
-                            vals.push(std::make_shared<VarNode>(gAddr));
+                            atom = std::make_shared<VarNode>(gAddr);
                         } else {
-                            // implicit global declaration
                             gAddr = _sym.globalAddr(name);
-                            vals.push(std::make_shared<VarNode>(gAddr));
+                            atom = std::make_shared<VarNode>(gAddr);
                         }
                     }
                 }
+                // postfix string indexing: s[i]
+                while (check(TokType::LBracket)) {
+                    next();
+                    auto idxExpr = parseExpr();
+                    expect(TokType::RBracket, "expected ']' after index");
+                    atom = std::make_shared<IndexNode>(atom, idxExpr);
+                }
+                vals.push(atom);
                 expectOperand = false;
 
             } else if (t == TokType::LParen) {

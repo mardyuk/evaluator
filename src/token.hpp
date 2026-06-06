@@ -5,7 +5,7 @@ enum class TokType {
     Num,        // numeric literal
     Str,        // string literal
     Name,       // identifier / built-in function name
-    Op,         // arithmetic / bitwise operator  (+ - * / ** // %/ % & | ^ ~ << >>)
+    Op,         // arithmetic / bitwise operator  (+ - * / ** // %/ % & | ^ ~ << >>)  comments: # and /* */
     Assign,     // =
     CompAssign, // += -= *= /= %= ^=
     Compare,    // == != < > <= >=
@@ -13,6 +13,8 @@ enum class TokType {
     RParen,     // )
     LBrace,     // {
     RBrace,     // }
+    LBracket,   // [
+    RBracket,   // ]
     Semi,       // ;
     Comma,      // ,
     Question,   // ?
