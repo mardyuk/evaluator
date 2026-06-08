@@ -1,0 +1,110 @@
+# nogo strings standard library
+# import with: import "stdlib/strings.nogo"
+
+fn reverse(s) {
+    let result = "";
+    for (let i = length(s) - 1; i >= 0; i -= 1) {
+        result = result + s[i];
+    }
+    return result;
+}
+
+fn upper(s) {
+    let result = "";
+    for (let i = 0; i < length(s); i += 1) {
+        let c = s[i];
+        let code = ord(c);
+        if (code >= 97 and code <= 122) {
+            c = chr(code - 32);
+        }
+        result = result + c;
+    }
+    return result;
+}
+
+fn lower(s) {
+    let result = "";
+    for (let i = 0; i < length(s); i += 1) {
+        let c = s[i];
+        let code = ord(c);
+        if (code >= 65 and code <= 90) {
+            c = chr(code + 32);
+        }
+        result = result + c;
+    }
+    return result;
+}
+
+fn is_palindrome(s) {
+    let l = 0;
+    let r = length(s) - 1;
+    while (l < r) {
+        if (s[l] != s[r]) { return 0; }
+        l += 1;
+        r -= 1;
+    }
+    return 1;
+}
+
+fn contains(s, sub) {
+    let slen = length(s);
+    let sublen = length(sub);
+    if (sublen == 0) { return 1; }
+    if (sublen > slen) { return 0; }
+    for (let i = 0; i <= slen - sublen; i += 1) {
+        let match = 1;
+        for (let j = 0; j < sublen; j += 1) {
+            if (s[i + j] != sub[j]) { match = 0; break; }
+        }
+        if (match) { return 1; }
+    }
+    return 0;
+}
+
+fn starts_with(s, prefix) {
+    let plen = length(prefix);
+    if (plen > length(s)) { return 0; }
+    for (let i = 0; i < plen; i += 1) {
+        if (s[i] != prefix[i]) { return 0; }
+    }
+    return 1;
+}
+
+fn ends_with(s, suffix) {
+    let slen = length(s);
+    let sflen = length(suffix);
+    if (sflen > slen) { return 0; }
+    let offset = slen - sflen;
+    for (let i = 0; i < sflen; i += 1) {
+        if (s[offset + i] != suffix[i]) { return 0; }
+    }
+    return 1;
+}
+
+fn count_char(s, ch) {
+    let n = 0;
+    for (let i = 0; i < length(s); i += 1) {
+        if (s[i] == ch) { n += 1; }
+    }
+    return n;
+}
+
+fn replace_char(s, idx, ch) {
+    let result = "";
+    for (let i = 0; i < length(s); i += 1) {
+        if (i == idx) {
+            result = result + ch;
+        } else {
+            result = result + s[i];
+        }
+    }
+    return result;
+}
+
+fn repeat(s, n) {
+    let result = "";
+    for (let i = 0; i < n; i += 1) {
+        result = result + s;
+    }
+    return result;
+}
