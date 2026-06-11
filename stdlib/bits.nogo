@@ -1,0 +1,75 @@
+# nogo bit-manipulation standard library
+# import with: import "stdlib/bits.nogo"
+# functions assume non-negative integer inputs
+
+fn is_bit_set(n, i) {
+    return (n >> i) & 1;
+}
+
+fn set_bit(n, i) {
+    return n | (1 << i);
+}
+
+fn clear_bit(n, i) {
+    return n & ~(1 << i);
+}
+
+fn toggle_bit(n, i) {
+    return n ^ (1 << i);
+}
+
+# number of bits set to 1
+fn popcount(n) {
+    let count = 0;
+    while (n > 0) {
+        count += n & 1;
+        n = n >> 1;
+    }
+    return count;
+}
+
+# position of the lowest set bit, or -1 if n == 0
+fn low_bit(n) {
+    if (n == 0) { return -1; }
+    let i = 0;
+    while ((n & 1) == 0) {
+        n = n >> 1;
+        i += 1;
+    }
+    return i;
+}
+
+# number of bits needed to represent n (bit_length(0) == 0)
+fn bit_length(n) {
+    let count = 0;
+    while (n > 0) {
+        count += 1;
+        n = n >> 1;
+    }
+    return count;
+}
+
+fn is_pow2(n) {
+    if (n <= 0) { return 0; }
+    return (n & (n - 1)) == 0;
+}
+
+# smallest power of two >= n
+fn next_pow2(n) {
+    if (n <= 1) { return 1; }
+    let p = 1;
+    while (p < n) {
+        p = p << 1;
+    }
+    return p;
+}
+
+# reverse the low `width` bits of n
+fn reverse_bits(n, width) {
+    let result = 0;
+    for (let i = 0; i < width; i += 1) {
+        result = (result << 1) | (n & 1);
+        n = n >> 1;
+    }
+    return result;
+}

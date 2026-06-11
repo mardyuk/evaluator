@@ -1,0 +1,153 @@
+# nogo conversion standard library
+# import with: import "stdlib/convert.nogo"
+# string <-> number conversion and number formatting
+
+# parse a base-10 integer (optional leading '-'), stops at first non-digit
+fn parse_int(s) {
+    if (length(s) == 0) { return 0; }
+    let n = 0;
+    let i = 0;
+    let neg = 0;
+    if (s[0] == "-") {
+        neg = 1;
+        i = 1;
+    }
+    while (i < length(s)) {
+        let code = ord(s[i]);
+        if (code < 48 or code > 57) { break; }
+        n = n * 10 + (code - 48);
+        i += 1;
+    }
+    if (neg) { return -n; }
+    return n;
+}
+
+# parse a decimal number with optional fractional part and sign
+fn parse_num(s) {
+    if (length(s) == 0) { return 0; }
+    let i = 0;
+    let neg = 0;
+    if (s[0] == "-") {
+        neg = 1;
+        i = 1;
+    }
+    let whole = 0;
+    while (i < length(s)) {
+        let code = ord(s[i]);
+        if (code < 48 or code > 57) { break; }
+        whole = whole * 10 + (code - 48);
+        i += 1;
+    }
+    let result = whole;
+    if (i < length(s)) {
+        if (s[i] == ".") {
+            i += 1;
+            let frac = 0;
+            let scale = 1;
+            while (i < length(s)) {
+                let code = ord(s[i]);
+                if (code < 48 or code > 57) { break; }
+                frac = frac * 10 + (code - 48);
+                scale = scale * 10;
+                i += 1;
+            }
+            result = result + frac / scale;
+        }
+    }
+    if (neg) { return -result; }
+    return result;
+}
+
+# render a non-negative integer in an arbitrary base (2..16)
+fn to_base(n, base) {
+    if (n == 0) { return "0"; }
+    let neg = 0;
+    if (n < 0) {
+        neg = 1;
+        n = -n;
+    }
+    let result = "";
+    while (n > 0) {
+        let d = n % base;
+        let c = "";
+        if (d < 10) {
+            c = chr(48 + d);
+        } else {
+            c = chr(97 + d - 10);
+        }
+        result = c + result;
+        n = n // base;
+    }
+    if (neg) {
+        result = "-" + result;
+    }
+    return result;
+}
+
+fn to_binary(n) {
+    return to_base(n, 2);
+}
+
+fn to_octal(n) {
+    return to_base(n, 8);
+}
+
+fn to_hex(n) {
+    return to_base(n, 16);
+}
+
+# group thousands with commas: 1234567 -> "1,234,567"
+fn with_commas(n) {
+    let neg = 0;
+    if (n < 0) {
+        neg = 1;
+        n = -n;
+    }
+    let s = to_base(n, 10);
+    let result = "";
+    let count = 0;
+    for (let i = length(s) - 1; i >= 0; i -= 1) {
+        result = s[i] + result;
+        count += 1;
+        if (count % 3 == 0) {
+            if (i > 0) {
+                result = "," + result;
+            }
+        }
+    }
+    if (neg) {
+        result = "-" + result;
+    }
+    return result;
+}
+
+# one Roman numeral place: d is 0..9, with its unit/five/ten symbols
+fn roman_digit(d, one, five, ten) {
+    if (d == 0) { return ""; }
+    if (d == 1) { return one; }
+    if (d == 2) { return one + one; }
+    if (d == 3) { return one + one + one; }
+    if (d == 4) { return one + five; }
+    if (d == 5) { return five; }
+    if (d == 6) { return five + one; }
+    if (d == 7) { return five + one + one; }
+    if (d == 8) { return five + one + one + one; }
+    return one + ten;
+}
+
+# convert 1..3999 to a Roman numeral string
+fn to_roman(n) {
+    if (n <= 0) { return ""; }
+    let result = "";
+    let thousands = n // 1000;
+    for (let i = 0; i < thousands; i += 1) {
+        result = result + "M";
+    }
+    n = n % 1000;
+    result = result + roman_digit(n // 100, "C", "D", "M");
+    n = n % 100;
+    result = result + roman_digit(n // 10, "X", "L", "C");
+    n = n % 10;
+    result = result + roman_digit(n, "I", "V", "X");
+    return result;
+}
