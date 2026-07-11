@@ -16,6 +16,17 @@ build/nogo run out.ngb --debug         # step debugger
 
 There is no test suite — test by running `.nogo` files manually.
 
+## Standard library (`stdlib/`)
+
+Plain nogo source files written in the language itself, *not* compiled into the binary. Pull them in at runtime with `import "stdlib/<name>.nogo"` (textual inclusion, cycle-detected). Each module is self-contained.
+
+- `strings.nogo` — reverse, upper, lower, is_palindrome, contains, starts_with, ends_with, count_char, replace_char, repeat.
+- `math.nogo` — clamp, lerp, sign, gcd, lcm, is_prime, factorial, map_range, rand_int, rand_float.
+- `bits.nogo` — is_bit_set, set_bit, clear_bit, toggle_bit, popcount, low_bit, bit_length, is_pow2, next_pow2, reverse_bits.
+- `convert.nogo` — parse_int, parse_num, to_base, to_binary, to_octal, to_hex, with_commas, to_roman.
+
+When adding stdlib code, bounds-guard string indexing (`s[i]`) with an explicit `if` rather than relying on `and`/`or` short-circuit evaluation — the VM evaluates both operands.
+
 ## Architecture
 
 The pipeline is strictly linear; each stage produces a single output passed to the next:
